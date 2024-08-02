@@ -1,0 +1,24 @@
+Vagrant.configure("2") do |config|
+  config.vm.define "wazuh" do |wazuh|
+    wazuh.vm.box = "generic/ubuntu2204"
+    wazuh.vm.hostname = "wazuh_server"
+    wazuh.vm.network "private_network", ip: "192.168.56.12"
+    wazuh.vm.network "public_network"
+    
+    wazuh.vm.provider "virtualbox" do |vb|
+      vb.gui = true
+      vb.memory = "4096"
+      vb.cpus = "4"
+    end
+    
+    wazuh.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update && sudo apt-get upgrade
+      sudo apt-get install -y ssh wget net-tools curl unzip nmap
+      sudo useradd -m -s /bin/bash -p "$(openssl passwd -1 adminpasswd)" adminuser
+      sudo usermod -aG sudo adminuser
+	  sudo touch /tmp/wazuh
+	  curl -sO https://packages.wazuh.com/4.8/wazuh-install.sh && sudo bash ./wazuh-install.sh -a >> /tmp/wazuh
+	SHELL
+  end
+end
+
